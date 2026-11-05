@@ -21,9 +21,13 @@ const taskTitle =req.body.title;
    if (!taskTitle || !taskTitle.trim()){
    res.status(400).send("Task title is required ");
 }else{
-	taskTitle.push({title: taskTitle});
+	tasks.push({title: taskTitle});
 	res.status(201).send(`task received : ${taskTitle}`)
 }
+});
+
+app.get("/tasks", (req, res) => {
+    res.json(tasks);
 });
 
 app.use((req,res)=>{
