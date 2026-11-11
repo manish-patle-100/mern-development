@@ -27,6 +27,14 @@ app.use((req, res) => {
 	res.status(404).send("404 - page not found");
 });
 
+function errorHandler(err, req, res, next) {
+	console.log(err);
+	res.status(500).json({
+		message: "something went wrong"
+	})
+}
+app.use(errorHandler);
+
 app.listen(3000, () => {
 	console.log("server running at http://localhost:3000");
 })
