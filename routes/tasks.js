@@ -1,106 +1,96 @@
 const express = require("express");
 const router = express.Router();
 
-const tasks = require("../data/tasks");
+const Task = require("../models/Task"); 
 
-router.post("/", (req, res) => {
-	const taskTitle = req.body.title;
+router.post("/", async (req, res) => {
+    try {
+        const taskTitle = req.body.title;
 
-	if (!taskTitle || !taskTitle.trim()) {
-		return res.status(400).send("Task title is required ");
-	} else {
-		tasks.push({ title: taskTitle });
-		return res.status(201).send(`task received : ${taskTitle}`)
-	}
+        if (!taskTitle || !taskTitle.trim()) {
+            return res.status(400).json({ message: "Task title is required" });
+        }
+
+        const newTask = await Task.create({ title: taskTitle });
+
+        res.status(201).json(newTask);
+
+    } catch (err) {
+        res.status(500).json({ message: "Failed to create task" });
+    }
 });
 
-router.get("/", (req, res) => {
-	res.json(tasks);
+router.get("/", async (req, res) => {
+    try {
+        const tasks = await Task.find();
+        res.json(tasks);
+    } catch (err) {
+        res.status(500).json({ message: "Failed to fetch tasks" });
+    }
 });
 
-router.get("/:index", (req, res) => {
-	const index = Number(req.params.index);
-
-	if (!Number.isInteger(index) || index < 0) {
-		return res.status(400).json({ message: "Invalid index" });
-	}
-
-	const task = tasks[index];
-
-	if (!task) {
-		return res.status(404).json({ message: "Task not found" });
-	}
-	res.json(task);
+router.get("/:id", async (req, res) => {
+    try {
+        const task = await Task.findById(req.params.id);
+        
+        if (!task) {
+            return res.status(404).json({ message: "Task not found" });
+        }
+        
+        res.json(task);
+    } catch (err) {
+        res.status(400).json({ message: "Invalid ID format" });
+    }
 });
 
-router.delete("/:index", (req, res) => {
-
-	const index = Number(req.params.index);
-
-	if (!Number.isInteger(index) || index < 0) {
-		return res.status(400).json({ message: "Invalid index" });
-	}
-
-	const task = tasks[index];
-
-	if (!task) {
-		return res.status(404).json({ message: "Task not found" });
-	}
-
-	tasks.splice(index, 1);
-	res.json({ message: "Tasks deleted successfully" })
+router.delete("/:id", async (req, res) => {
+    try {
+        const deletedTask = await Task.findByIdAndDelete(req.params.id);
+        
+        if (!deletedTask) {
+            return res.status(404).json({ message: "Task not found" });
+        }
+        
+        res.json({ message: "Task deleted successfully" });
+    } catch (err) {
+        res.status(400).json({ message: "Invalid ID format" });
+    }
 });
 
-router.put("/:index", (req, res) => {
-	const index = Number(req.params.index);
-
-	if (!Number.isInteger(index) || index < 0) {
-		return res.status(400).json({ message: "Invalid Index" });
-	}
-
-	const task = tasks[index];
-
-	if (!task) {
-		return res.status(404).json({ message: "Task not found" });
-	}
-
-	const newTitle = req.body.title;
-
-	if (!newTitle || !newTitle.trim()) {
-		return res.status(400).json({ message: "Invalid Title" });
-	}
-
-	task.title = newTitle;
-	res.status(200).json({ message: "Task updated successfully" });
+router.put("/:id", async (req, res) => {
+    try {
+        const updatedTask = await Task.findByIdAndUpdate(
+            req.params.id, 
+            { title: req.body.title }, 
+            { new: true, runValidators: true } 
+        );
+        
+        if (!updatedTask) {
+            return res.status(404).json({ message: "Task not found" });
+        }
+        
+        res.status(200).json(updatedTask);
+    } catch (err) {
+        res.status(400).json({ message: "Invalid ID or data" });
+    }
 });
 
-router.patch("/:index", (req, res) => {
-	const index = Number(req.params.index);
+router.patch("/:id", async (req, res) => {
+    try {
+        const task = await Task.findById(req.params.id);
+        if (!task) {
+            return res.status(404).json({ message: "Task not found" });
+        }
 
-	if (!Number.isInteger(index) || index < 0) {
-		return res.status(400).json({ message: "Invalid Index" });
-	}
+        // Only update fields if they were sent in the request
+        if ("title" in req.body) task.title = req.body.title;
+        if ("completed" in req.body) task.completed = req.body.completed;
 
-	const task = tasks[index];
-
-	if (!task) {
-		return res.status(404).json({ message: "Task not found" });
-	}
-
-	if ("title" in req.body) {
-		const newTitle = req.body.title;
-
-		if (!newTitle || typeof newTitle !== "string" || !newTitle.trim()) {
-			return res.status(400).json({ message: "Invalid Title" });
-		}
-
-		task.title = newTitle.trim();
-	}
-
-	return res.status(200).json({
-		message: "Task updated successfully",
-		task
-	});
+        const updatedTask = await task.save();
+        res.status(200).json(updatedTask);
+    } catch (err) {
+        res.status(400).json({ message: "Invalid ID or data" });
+    }
 });
 
 
