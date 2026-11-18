@@ -18,6 +18,9 @@ app.use(logger);
 app.use(express.json());
 app.use("/tasks", tasksRouter);
 
+const authRouter = require("./routes/auth");
+app.use("/api/auth", authRouter);
+
 app.get("/", (req, res) => {
 	res.send("welcome to my first Express server ")
 });
