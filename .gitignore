@@ -1,2 +1,6 @@
 node_modules/
 .env
+
+# Focused on exams today!git add .
+git commit -m "docs: update gitignore for exam break"
+git push
