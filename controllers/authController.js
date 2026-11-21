@@ -54,8 +54,8 @@ const loginUser = async (req, res) => {
         // 3. Generate the JWT Token
         const token = jwt.sign(
             { userId: user._id }, 
-            "mySuperSecretKey", 
-            { expiresIn: "1d" } 
+            process.env.JWT_SECRET, 
+            { expiresIn: "1d" }
         );
 
         res.status(200).json({

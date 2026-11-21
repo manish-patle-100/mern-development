@@ -1,9 +1,9 @@
 const Task = require("../models/Task");
 
-// 1. GET ALL
+// 1. GET ALL (Only gets tasks for the logged-in user)
 const getTasks = async (req, res) => {
     try {
-        const tasks = await Task.find();
+        const tasks = await Task.find({ user: req.user.userId });
         res.json(tasks);
     } catch (err) {
         res.status(500).json({ message: "Failed to fetch tasks" });
@@ -32,14 +32,20 @@ const createTask = async (req, res) => {
             return res.status(400).json({ message: "Task title is required" });
         }
 
-        const newTask = await Task.create({ title: taskTitle });
+        const newTask = await Task.create({ 
+            title: taskTitle,
+            user: req.user.userId 
+        });
+        
         res.status(201).json(newTask);
-            } catch (err) {
+    } catch (err) {
+        console.log(err);
         res.status(500).json({ message: "Failed to create task" });
     }
 };
 
-const updateTask=async (req, res) => {
+// 4. UPDATE (PUT)
+const updateTask = async (req, res) => {
     try {
         const updatedTask = await Task.findByIdAndUpdate(
             req.params.id, 
@@ -57,6 +63,7 @@ const updateTask=async (req, res) => {
     }
 };
 
+// 5. PATCH
 const patchTask = async (req, res) => {
     try {
         const task = await Task.findById(req.params.id);
@@ -74,7 +81,8 @@ const patchTask = async (req, res) => {
     }
 };
 
-const deleteTask= async (req, res) => {
+// 6. DELETE
+const deleteTask = async (req, res) => {
     try {
         const deletedTask = await Task.findByIdAndDelete(req.params.id);
         
